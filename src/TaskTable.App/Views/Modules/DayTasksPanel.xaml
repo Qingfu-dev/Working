@@ -1,0 +1,95 @@
+<UserControl x:Class="TaskTable.App.Views.Modules.DayTasksPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:TaskTable.App.ViewModels">
+    <Grid Margin="14,10,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题 + 累计 + 添加 -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding SelectedDateTitle}" FontSize="14" FontWeight="SemiBold"
+                       VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{Binding DayTimeText}" FontSize="12"
+                       Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <Button Grid.Column="2" Style="{StaticResource IconButton}" Width="28" Height="28" Padding="5"
+                    ToolTip="添加到该日" Command="{Binding AddTaskCommand}">
+                <Image Source="pack://application:,,,/Assets/Icons/add.png" Width="14" Height="14"/>
+            </Button>
+        </Grid>
+
+        <ListBox Grid.Row="1" ItemsSource="{Binding DayTasks}"
+                 Background="Transparent" BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:TaskItemViewModel}">
+                    <Border Background="{StaticResource SurfaceBrush}"
+                            CornerRadius="{StaticResource RadiusControl}"
+                            Padding="10,8" Margin="0,0,0,6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Style="{StaticResource RoundCheckBox}"
+                                      IsChecked="{Binding IsDone, Mode=TwoWay}"
+                                      VerticalAlignment="Top" Margin="0,2,10,0"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding Title}" FontSize="14"
+                                           Opacity="{Binding TitleOpacity}"
+                                           TextWrapping="Wrap" TextTrimming="None"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding PriorityText}" FontSize="11"
+                                               Foreground="{Binding PriorityBrush}" Margin="0,0,8,0"
+                                               VerticalAlignment="Center"/>
+                                    <Border Style="{StaticResource Badge}" Padding="6,1"
+                                            Visibility="{Binding IsAi, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="AI" FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource BrandTextBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding TimeText}" FontSize="11"
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               Margin="8,0,0,0" VerticalAlignment="Center"
+                                               Visibility="{Binding HasTime, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Button Style="{StaticResource IconButton}" Width="28" Height="28" Padding="5"
+                                        ToolTip="{Binding TimerButtonTip}"
+                                        Tag="{Binding}" Click="TimerButton_Click">
+                                    <Image Source="{Binding TimerButtonIcon}" Width="14" Height="14"/>
+                                </Button>
+                                <Button Style="{StaticResource IconButton}" Width="28" Height="28" Padding="5"
+                                        ToolTip="删除" Tag="{Binding}" Click="DeleteButton_Click">
+                                    <Image Source="pack://application:,,,/Assets/Icons/trash.png" Width="13" Height="13"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

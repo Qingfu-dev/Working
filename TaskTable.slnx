@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskTable.App/TaskTable.App.csproj" />
+    <Project Path="src/TaskTable.Core/TaskTable.Core.csproj" />
+    <Project Path="src/TaskTable.Infra/TaskTable.Infra.csproj" />
+  </Folder>
+</Solution>

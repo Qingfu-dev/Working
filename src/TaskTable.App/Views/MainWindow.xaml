@@ -1,0 +1,95 @@
+<Window x:Class="TaskTable.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:db="clr-namespace:TaskTable.App.Dashboard"
+        Title="任务表" Width="1180" Height="760"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize" ShowInTaskbar="True">
+    <Border x:Name="RootCard" CornerRadius="{StaticResource RadiusCard}" Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="6">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.18" Color="#000000"/>
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ═══ 标题栏 ═══ -->
+            <Grid x:Name="TitleBar" Grid.Row="0" Height="46" Margin="12,6,8,0" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="pack://application:,,,/Assets/Icons/calendar.png" Width="18" Height="18" Margin="4,0,8,0"/>
+                    <TextBlock Text="任务表" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource IconButton}" ToolTip="{Binding AddButtonTip}" Command="{Binding AddTaskCommand}">
+                        <Image Source="pack://application:,,,/Assets/Icons/add.png" Width="16" Height="16"/>
+                    </Button>
+                    <Button Style="{StaticResource IconButton}" ToolTip="专注热力图" Command="{Binding OpenHeatmapCommand}">
+                        <Image Source="pack://application:,,,/Assets/Icons/chart.png" Width="16" Height="16"/>
+                    </Button>
+                    <Button Style="{StaticResource IconButton}" ToolTip="设置" Command="{Binding OpenSettingsCommand}">
+                        <Image Source="pack://application:,,,/Assets/Icons/settings.png" Width="16" Height="16"/>
+                    </Button>
+                    <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="6,0"/>
+                    <Button Style="{StaticResource IconButton}" ToolTip="重置布局（恢复默认模块排列）"
+                            AutomationProperties.Name="重置布局" Click="ResetLayout_Click">
+                        <Path Data="M2,2 H12 V12 H2 Z M7,2 V12" Stroke="{StaticResource TextMutedBrush}"
+                              StrokeThickness="1.3" StrokeLineJoin="Round" Width="13" Height="13" Stretch="Uniform"/>
+                    </Button>
+                    <Button Style="{StaticResource IconButton}" ToolTip="最小化到托盘"
+                            AutomationProperties.Name="最小化" Click="Minimize_Click">
+                        <TextBlock Text="—" FontSize="13" VerticalAlignment="Center" Margin="0,-4,0,0"/>
+                    </Button>
+                    <Button x:Name="MaxButton" Style="{StaticResource IconButton}" ToolTip="最大化"
+                            AutomationProperties.Name="最大化" Click="MaxRestore_Click">
+                        <Grid Width="13" Height="13">
+                            <Path x:Name="MaxGlyph" Data="M2,2 H11 V11 H2 Z" Stroke="{StaticResource TextMutedBrush}"
+                                  StrokeThickness="1.3" StrokeLineJoin="Round" Stretch="Uniform"/>
+                            <Path x:Name="RestoreGlyph" Data="M4,1 H11 V8 M1,4 H8 V11 H1 Z" Stroke="{StaticResource TextMutedBrush}"
+                                  StrokeThickness="1.3" StrokeLineJoin="Round" Stretch="Uniform" Visibility="Collapsed"/>
+                        </Grid>
+                    </Button>
+                    <Button Style="{StaticResource IconButton}" ToolTip="关闭（收进托盘）"
+                            AutomationProperties.Name="关闭" Click="Close_Click">
+                        <Image Source="pack://application:,,,/Assets/Icons/close.png" Width="14" Height="14"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ═══ 状态条：提示 + 计时 + 摘要 ═══ -->
+            <Grid x:Name="StatusStrip" Grid.Row="1" Height="30" Margin="20,2,20,6" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding FooterHint}" Foreground="{StaticResource TextMutedBrush}"
+                           FontSize="11.5" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Style="{StaticResource Badge}" Background="{StaticResource BrandSoftBrush}"
+                            Margin="0,0,10,0" Visibility="{Binding HasRunningTimer, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="pack://application:,,,/Assets/Icons/time.png" Width="12" Height="12" Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding RunningTimerText}" FontSize="12"
+                                       Foreground="{StaticResource BrandTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="{Binding SessionText}" Foreground="{StaticResource TextMutedBrush}"
+                               FontSize="12.5" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding TodaySummary}" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ═══ 模块停靠区 ═══ -->
+            <db:DockHost x:Name="Dock" Grid.Row="2" Margin="12,0,12,12"/>
+        </Grid>
+    </Border>
+</Window>

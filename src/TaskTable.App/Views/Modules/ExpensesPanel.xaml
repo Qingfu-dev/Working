@@ -1,0 +1,61 @@
+<UserControl x:Class="TaskTable.App.Views.Modules.ExpensesPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="14,10,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="当日消费" FontSize="12.5" FontWeight="Medium" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding ExpenseTotalText}" HorizontalAlignment="Right" FontSize="12.5"
+                       Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding DayExpenses}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{StaticResource SurfaceMutedBrush}"
+                                CornerRadius="{StaticResource RadiusPill}"
+                                Padding="8,3" Margin="0,0,6,6">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="{Binding CategoryBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding DisplayText}" FontSize="12"
+                                           VerticalAlignment="Center"/>
+                                <Button Style="{StaticResource IconButton}" Width="18" Height="18"
+                                        Padding="0" Margin="6,0,0,0" ToolTip="删除记录"
+                                        Tag="{Binding}" Click="ExpenseDelete_Click">
+                                    <TextBlock Text="✕" FontSize="10"
+                                               Foreground="{StaticResource TextMutedBrush}"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+            <TextBox Width="72" MinHeight="30" Style="{StaticResource InputBox}"
+                     Text="{Binding NewExpenseAmount, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="金额，如 25.5"/>
+            <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="吃饭" Margin="8,0,0,0"
+                    Command="{Binding AddExpenseCommand}" CommandParameter="吃饭"/>
+            <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="零食" Margin="6,0,0,0"
+                    Command="{Binding AddExpenseCommand}" CommandParameter="零食"/>
+            <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="购物" Margin="6,0,0,0"
+                    Command="{Binding AddExpenseCommand}" CommandParameter="购物"/>
+            <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="额外" Margin="6,0,0,0"
+                    Command="{Binding AddExpenseCommand}" CommandParameter="额外"/>
+        </WrapPanel>
+    </Grid>
+</UserControl>

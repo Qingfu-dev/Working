@@ -1,0 +1,43 @@
+<UserControl x:Class="TaskTable.App.Views.Modules.PomodoroPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="14,6,14,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 进度环 + 大倒计时 -->
+        <Grid x:Name="RingGrid" Grid.Row="0" Width="150" Height="150"
+              HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Ellipse x:Name="RingBase" Width="140" Height="140"
+                     Stroke="{StaticResource SurfaceMutedBrush}" StrokeThickness="10"/>
+            <Canvas x:Name="RingCanvas" Width="150" Height="150" IsHitTestVisible="False">
+                <Path x:Name="RingArc" Stroke="{Binding PomodoroPhaseBrush}" StrokeThickness="10"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            </Canvas>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding PomodoroBigText}" FontSize="30" FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding PomodoroPhaseLabel}" FontSize="11.5" Margin="0,2,0,0"
+                           Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 控制按钮 -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+            <Button Style="{StaticResource PrimaryButton}" MinWidth="104" MinHeight="30" FontSize="13"
+                    Content="{Binding PomodoroMainText}"
+                    Command="{Binding TogglePomodoroCommand}"
+                    IsEnabled="{Binding PomodoroEnabled}"/>
+            <Button Style="{StaticResource GhostButton}" MinWidth="62" MinHeight="30" FontSize="13"
+                    Margin="8,0,0,0" Content="重置"
+                    Command="{Binding ResetPomodoroCommand}"
+                    Visibility="{Binding PomodoroResetVisible, Converter={StaticResource BoolToVis}}"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Text="{Binding PomodoroDurationHint}" FontSize="11"
+                   Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+    </Grid>
+</UserControl>

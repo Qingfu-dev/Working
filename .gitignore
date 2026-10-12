@@ -1,0 +1,11 @@
+# .NET / WPF
+bin/
+obj/
+publish/
+*.user
+*.suo
+.vs/
+
+# 构建产物与本地文件
+*.pdb
+*.log
