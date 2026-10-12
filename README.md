@@ -43,11 +43,30 @@ dotnet publish src/TaskTable.App/TaskTable.App.csproj -c Release -r win-x64 \
 
 ```
 TaskTable.slnx
+├── assets/
+│   └── icons-source/     # 界面图标的 256px 源文件（仅收录实际使用的图标）
 └── src/
     ├── TaskTable.App/     # WPF 界面层：Views（模块面板）、ViewModels、Dashboard（停靠布局容器）、Services
     ├── TaskTable.Core/    # 领域模型与核心逻辑（任务、计时、日历状态计算等）
     └── TaskTable.Infra/   # 基础设施：SQLite 仓储、收件箱监听、设置与系统集成
 ```
+
+## 图标素材
+
+`assets/icons-source/` 收录界面图标的 256px 源文件（来自图标库的 `8-界面` / `9-媒体` 分类，仅含实际使用的图标）：
+
+| 源文件 | 库内名称 | 用途 |
+|---|---|---|
+| add.png | 8-界面/菜单添加 | 快速添加任务 |
+| chart.png | 8-界面/网格 | 专注热力图入口 |
+| close.png | 8-界面/叉号 | 关闭按钮 |
+| settings.png | 8-界面/设置 | 设置入口 |
+| calendar.png | 9-媒体/日历 | 标题栏图标 |
+| time.png | 9-媒体/时间 | 计时徽标 |
+| trash.png | 9-媒体/垃圾桶 | 删除任务 |
+| play.png | 9-媒体/播放 | 开始计时 |
+| stop.png | 9-媒体/停止 | 结束计时 |
+| tray.png | 9-媒体/日历（白色） | 托盘图标 |
 
 ## 说明
 
