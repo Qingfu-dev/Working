@@ -34,8 +34,9 @@ public sealed class DockNode
 public static class DockTree
 {
     /// <summary>移除模块并返回新树（分组只余 1 个子节点时自动折叠；整树为空返回 null）。</summary>
-    public static DockNode? Remove(DockNode root, string module)
+    public static DockNode? Remove(DockNode? root, string module)
     {
+        if (root is null) return null;
         if (root.Module == module) return null;
         if (root.Children is null) return root;
 
@@ -81,7 +82,18 @@ public static class DockTree
     }
 }
 
-/// <summary>布局持久化：%AppData%\TaskTable\layout.json。</summary>
+/// <summary>浮窗状态：模块 id 与窗口位置 / 大小 / 置顶。</summary>
+public sealed class FloatState
+{
+    public string? Module { get; set; }
+    public double Left { get; set; }
+    public double Top { get; set; }
+    public double Width { get; set; }
+    public double Height { get; set; }
+    public bool Topmost { get; set; }
+}
+
+/// <summary>布局持久化：%AppData%\TaskTable\layout.json（停靠树 + 模块最大化 + 浮窗）。</summary>
 public static class DockLayoutStore
 {
     private static string FilePath => Path.Combine(AppPaths.Root, "layout.json");
@@ -90,21 +102,33 @@ public static class DockLayoutStore
     {
         public DockNode? Layout { get; set; }
         public string? Maximized { get; set; }
+        public List<FloatState>? Floating { get; set; }
     }
 
-    public static (DockNode Layout, string? Maximized) Load()
+    public static (DockNode? Layout, string? Maximized, List<FloatState> Floating) Load()
     {
         try
         {
             if (File.Exists(FilePath))
             {
                 var payload = JsonSerializer.Deserialize<Payload>(File.ReadAllText(FilePath));
-                if (payload?.Layout is not null && IsValid(payload.Layout))
+                var floating = payload?.Floating?
+                    .Where(f => f.Module is not null && DockNode.KnownModules.Contains(f.Module))
+                    .ToList() ?? new List<FloatState>();
+                foreach (var f in floating)
                 {
-                    Normalize(payload.Layout);
-                    var maximized = payload.Maximized is not null && DockNode.KnownModules.Contains(payload.Maximized)
+                    f.Left = Safe(f.Left);
+                    f.Top = Safe(f.Top);
+                    f.Width = Safe(f.Width);
+                    f.Height = Safe(f.Height);
+                }
+                if (IsValid(payload?.Layout, floating))
+                {
+                    if (payload!.Layout is not null) Normalize(payload.Layout);
+                    var docked = CollectModules(payload.Layout);
+                    var maximized = payload.Maximized is not null && docked.Contains(payload.Maximized)
                         ? payload.Maximized : null;
-                    return (payload.Layout, maximized);
+                    return (payload.Layout, maximized, floating);
                 }
                 AppLog.Warn("布局文件无效，改用默认布局");
             }
@@ -113,16 +137,16 @@ public static class DockLayoutStore
         {
             AppLog.Warn($"布局读取失败，改用默认布局: {ex.Message}");
         }
-        return (DockNode.Default(), null);
+        return (DockNode.Default(), null, new List<FloatState>());
     }
 
-    public static void Save(DockNode layout, string? maximized)
+    public static void Save(DockNode? layout, string? maximized, IReadOnlyList<FloatState> floating)
     {
         try
         {
             AppPaths.EnsureAll();
             File.WriteAllText(FilePath, JsonSerializer.Serialize(
-                new Payload { Layout = layout, Maximized = maximized },
+                new Payload { Layout = layout, Maximized = maximized, Floating = floating.ToList() },
                 new JsonSerializerOptions { WriteIndented = true }));
         }
         catch (Exception ex)
@@ -130,6 +154,8 @@ public static class DockLayoutStore
             AppLog.Error("布局保存失败", ex);
         }
     }
+
+    private static double Safe(double v) => double.IsFinite(v) ? v : 0;
 
     /// <summary>补全缺省字段（方向、权重数量），保证构建时安全。</summary>
     private static void Normalize(DockNode node)
@@ -148,18 +174,29 @@ public static class DockLayoutStore
         foreach (var child in node.Children) Normalize(child);
     }
 
-    /// <summary>校验：四个已知模块恰好各出现一次。</summary>
-    private static bool IsValid(DockNode node)
+    /// <summary>收集树上的模块 id（结构不合法时返回 false）。</summary>
+    private static bool Collect(DockNode? node, List<string> found)
+    {
+        if (node is null) return true;
+        if (node.Module is not null) { found.Add(node.Module); return true; }
+        return node.Children is { Count: >= 2 } && node.Children.All(c => Collect(c, found));
+    }
+
+    private static List<string> CollectModules(DockNode? node)
     {
         var found = new List<string>();
-        bool Walk(DockNode n)
-        {
-            if (n.Module is not null) { found.Add(n.Module); return true; }
-            return n.Children is { Count: >= 2 } && n.Children.All(Walk);
-        }
-        return Walk(node)
-            && found.Count == DockNode.KnownModules.Length
-            && found.Distinct().Count() == found.Count
-            && found.All(m => DockNode.KnownModules.Contains(m));
+        Collect(node, found);
+        return found;
+    }
+
+    /// <summary>校验：停靠树 + 浮窗合计四类已知模块恰好各出现一次。</summary>
+    private static bool IsValid(DockNode? node, List<FloatState> floating)
+    {
+        var tree = new List<string>();
+        if (!Collect(node, tree)) return false;
+        var all = tree.Concat(floating.Select(f => f.Module!)).ToList();
+        return all.Count == DockNode.KnownModules.Length
+            && all.Distinct().Count() == all.Count
+            && all.All(m => DockNode.KnownModules.Contains(m));
     }
 }

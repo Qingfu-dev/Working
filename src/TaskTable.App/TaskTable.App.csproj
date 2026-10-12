@@ -20,7 +20,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <Product>任务表</Product>
     <Company>Qing_Fu.CN</Company>
   </PropertyGroup>

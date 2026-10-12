@@ -23,6 +23,9 @@ public partial class MainWindow : Window
             if (e.Key == Key.Escape) Dock.CancelDrag();
         };
         StateChanged += OnStateChanged;
+
+        // DataContext 就绪后恢复上次退出时处于浮窗状态的模块
+        Dock.RestoreFloats();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
