@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 using TaskTable.App.ViewModels;
 using TaskTable.Infra.System;
 
@@ -28,5 +29,12 @@ public partial class SettingsWindow : Window
     {
         AppPaths.EnsureAll();
         Process.Start(new ProcessStartInfo("explorer.exe", AppPaths.InboxDir) { UseShellExecute = true });
+    }
+
+    /// <summary>点击「使用教程」：跳转视频链接（未配置时不响应）。</summary>
+    private void Tutorial_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (!AppInfo.HasTutorialUrl) return;
+        Process.Start(new ProcessStartInfo(AppInfo.TutorialUrl) { UseShellExecute = true });
     }
 }

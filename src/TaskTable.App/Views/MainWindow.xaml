@@ -30,13 +30,16 @@
                     <TextBlock Text="任务表" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Style="{StaticResource IconButton}" ToolTip="{Binding AddButtonTip}" Command="{Binding AddTaskCommand}">
+                    <Button Style="{StaticResource IconButton}" ToolTip="{Binding AddButtonTip}"
+                            AutomationProperties.Name="快速添加" Command="{Binding AddTaskCommand}">
                         <Image Source="pack://application:,,,/Assets/Icons/add.png" Width="16" Height="16"/>
                     </Button>
-                    <Button Style="{StaticResource IconButton}" ToolTip="专注热力图" Command="{Binding OpenHeatmapCommand}">
+                    <Button Style="{StaticResource IconButton}" ToolTip="专注热力图"
+                            AutomationProperties.Name="专注热力图" Command="{Binding OpenHeatmapCommand}">
                         <Image Source="pack://application:,,,/Assets/Icons/chart.png" Width="16" Height="16"/>
                     </Button>
-                    <Button Style="{StaticResource IconButton}" ToolTip="设置" Command="{Binding OpenSettingsCommand}">
+                    <Button Style="{StaticResource IconButton}" ToolTip="设置"
+                            AutomationProperties.Name="设置" Command="{Binding OpenSettingsCommand}">
                         <Image Source="pack://application:,,,/Assets/Icons/settings.png" Width="16" Height="16"/>
                     </Button>
                     <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="6,0"/>

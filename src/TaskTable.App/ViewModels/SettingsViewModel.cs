@@ -24,6 +24,12 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public string InboxPath => AppPaths.InboxDir;
 
+    // ── 关于软件 ──
+    public string AppVersionText => AppInfo.VersionText;
+    public string AuthorText => AppInfo.Author;
+    public bool HasTutorialUrl => AppInfo.HasTutorialUrl;
+    public string TutorialText => AppInfo.HasTutorialUrl ? "观看视频教程" : "视频教程制作中，敬请期待";
+
     public event Action? Saved;
     public event Action? Cancelled;
 
