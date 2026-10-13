@@ -4,7 +4,7 @@ using TaskTable.Infra.System;
 
 namespace TaskTable.App.Services;
 
-/// <summary>全局快捷键：Alt+Space → 快速添加。挂在隐藏消息窗口上，窗口隐藏到托盘时依然有效。</summary>
+/// <summary>全局快捷键：Alt+Space → 快速添加。挂在不可见后台消息窗口上（不进任务栏 / Alt+Tab / 任务管理器「应用」列表），窗口隐藏到托盘时依然有效。</summary>
 public sealed class HotkeyService : IDisposable
 {
     private const int WM_HOTKEY = 0x0312;
@@ -13,6 +13,11 @@ public sealed class HotkeyService : IDisposable
     private const int VK_SPACE = 0x20;
     private const int VK_Q = 0x51;
     private const int HOTKEY_ID = 0x7001;
+
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int WS_EX_NOACTIVATE = 0x08000000;
+    private const int SW_HIDE = 0;
 
     /// <summary>候选热键，按优先级回退（Alt+Space 常被 PowerToys 等占用）。</summary>
     private static readonly (int Mod, int Key, string Name)[] Candidates =
@@ -28,6 +33,15 @@ public sealed class HotkeyService : IDisposable
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
     private readonly HwndSource _source;
     private readonly Action _callback;
 
@@ -36,9 +50,15 @@ public sealed class HotkeyService : IDisposable
         _callback = callback;
         var parameters = new HwndSourceParameters("TaskTable.Hotkey")
         {
-            Width = 0, Height = 0, PositionX = 0, PositionY = 0
+            Width = 0, Height = 0, PositionX = 0, PositionY = 0,
+            WindowStyle = 0, // 不带 WS_VISIBLE：纯后台消息窗口，始终不可见
+            ExtendedWindowStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
         };
         _source = new HwndSource(parameters);
+        // 兜底：确保工具窗口样式与隐藏状态落实（避免以任何形式出现在窗口列表里）
+        var exStyle = (long)GetWindowLongPtr(_source.Handle, GWL_EXSTYLE);
+        SetWindowLongPtr(_source.Handle, GWL_EXSTYLE, (IntPtr)(exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE));
+        ShowWindow(_source.Handle, SW_HIDE);
         _source.AddHook(WndProc);
 
         foreach (var (mod, key, name) in Candidates)
