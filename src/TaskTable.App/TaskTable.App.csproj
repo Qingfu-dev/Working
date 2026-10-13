@@ -22,7 +22,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>0.1.12</Version>
+    <Version>0.1.13</Version>
     <Product>任务表</Product>
     <Company>Qing_Fu.CN</Company>
   </PropertyGroup>

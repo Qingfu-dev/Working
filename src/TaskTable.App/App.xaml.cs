@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using TaskTable.App.Services;
 using TaskTable.App.ViewModels;
 using TaskTable.App.Views;
@@ -21,6 +22,16 @@ public partial class App : Application
     private AutostartService? _autostart;
     private TimeEntryRepository? _timeRepo;
     private ExpenseRepository? _expenseRepo;
+
+    /// <summary>收件箱导入合并窗口（毫秒）：静默这么久没有新导入就统一处理一次。</summary>
+    private const int InboxCoalesceWindowMs = 500;
+
+    /// <summary>持续不断有导入时的最大延迟（毫秒）：保证界面不会长时间不刷新。</summary>
+    private const int InboxCoalesceMaxDelayMs = 2000;
+
+    private DispatcherTimer? _inboxCoalesce;
+    private int _inboxPendingCount;
+    private DateTime _inboxLastFlush = DateTime.Now;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -87,12 +98,16 @@ public partial class App : Application
         _mainWindow = new MainWindow(_mainVm);
 
         // ── AI 收件箱 ──
-        _watcher = new InboxWatcher(taskRepo);
-        _watcher.TasksImported += n => Dispatcher.Invoke(() =>
+        // 批量导入（一次投放多个 json）时把「全量刷新 + 气泡」合并处理，
+        // 否则每个文件都触发一次 RefreshAll，风暴场景会把 UI 线程反复占满。
+        _inboxCoalesce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(InboxCoalesceWindowMs) };
+        _inboxCoalesce.Tick += (_, _) =>
         {
-            _mainVm.RefreshAll();
-            _tray?.ShowBalloon("AI 任务入列", $"{n} 条任务已加入列表");
-        });
+            _inboxCoalesce!.Stop();
+            FlushInboxImports();
+        };
+        _watcher = new InboxWatcher(taskRepo);
+        _watcher.TasksImported += n => Dispatcher.Invoke(() => AccumulateInboxImports(n));
         _watcher.Start();
 
         // ── 托盘 + 全局热键 ──
@@ -121,6 +136,42 @@ public partial class App : Application
     {
         AppLog.Info($"通知: {title}｜{message}");
         _tray?.ShowBalloon(title, message);
+    }
+
+    /// <summary>
+    /// 收件箱导入累积：
+    /// 上一批已处理完时，本次导入立即生效（与单个文件导入的原有手感一致）；
+    /// 之后再到达的导入合并到合并窗口里统一处理，避免风暴场景反复全量刷新。
+    /// </summary>
+    private void AccumulateInboxImports(int count)
+    {
+        if (_inboxPendingCount == 0)
+        {
+            _inboxPendingCount = count;
+            FlushInboxImports();
+            ArmInboxCoalesce(InboxCoalesceWindowMs);
+            return;
+        }
+        _inboxPendingCount += count;
+        int heldMs = (int)(DateTime.Now - _inboxLastFlush).TotalMilliseconds;
+        ArmInboxCoalesce(Math.Clamp(InboxCoalesceMaxDelayMs - heldMs, 1, InboxCoalesceWindowMs));
+    }
+
+    private void ArmInboxCoalesce(int waitMs)
+    {
+        _inboxCoalesce!.Stop();
+        _inboxCoalesce.Interval = TimeSpan.FromMilliseconds(waitMs);
+        _inboxCoalesce.Start();
+    }
+
+    private void FlushInboxImports()
+    {
+        int n = _inboxPendingCount;
+        _inboxPendingCount = 0;
+        _inboxLastFlush = DateTime.Now;
+        if (n <= 0) return;
+        _mainVm?.RefreshAll();
+        _tray?.ShowBalloon("AI 任务入列", $"{n} 条任务已加入列表");
     }
 
     private void ShowSettings()

@@ -74,7 +74,11 @@ public sealed class TimeEntryRepository
         if (running is not null) Stop(running.Id);
     }
 
-    /// <summary>某任务某天的累计秒数（进行中的记录在 C# 侧按时间戳差值实时累计）。</summary>
+    /// <summary>
+    /// 某任务某天的累计秒数（进行中的记录在 C# 侧按时间戳差值实时累计）。
+    /// 日期过滤用 start_time 的区间比较（时间串以 yyyy-MM-dd 开头，字典序即日期序），
+    /// 以便命中 idx_time_entries_start——不能对列套 substr()，否则索引失效退化为全表扫描。
+    /// </summary>
     public long GetSecondsForTaskOnDate(string taskId, DateOnly date)
     {
         using var conn = _db.Open();
@@ -82,10 +86,11 @@ public sealed class TimeEntryRepository
         cmd.CommandText = """
             SELECT start_time, end_time, duration_seconds
             FROM time_entries
-            WHERE task_id = $task AND substr(start_time, 1, 10) = $day;
+            WHERE task_id = $task AND start_time >= $from AND start_time < $to;
             """;
         cmd.Parameters.AddWithValue("$task", taskId);
-        cmd.Parameters.AddWithValue("$day", date.ToString("yyyy-MM-dd"));
+        cmd.Parameters.AddWithValue("$from", date.ToString("yyyy-MM-dd"));
+        cmd.Parameters.AddWithValue("$to", date.AddDays(1).ToString("yyyy-MM-dd"));
 
         long total = 0;
         using var reader = cmd.ExecuteReader();
@@ -107,8 +112,9 @@ public sealed class TimeEntryRepository
     {
         using var conn = _db.Open();
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT start_time, end_time, duration_seconds FROM time_entries WHERE substr(start_time, 1, 10) = $day;";
-        cmd.Parameters.AddWithValue("$day", date.ToString("yyyy-MM-dd"));
+        cmd.CommandText = "SELECT start_time, end_time, duration_seconds FROM time_entries WHERE start_time >= $from AND start_time < $to;";
+        cmd.Parameters.AddWithValue("$from", date.ToString("yyyy-MM-dd"));
+        cmd.Parameters.AddWithValue("$to", date.AddDays(1).ToString("yyyy-MM-dd"));
         long total = 0;
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -123,7 +129,7 @@ public sealed class TimeEntryRepository
         return GetTimeByRange(from, from.AddMonths(1));
     }
 
-    /// <summary>按日期区间（左闭右开）聚合每日累计秒数，供热力图使用。</summary>
+    /// <summary>按日期区间（左闭右开）聚合每日累计秒数，供热力图使用。区间比较命中 idx_time_entries_start。</summary>
     public Dictionary<DateOnly, long> GetTimeByRange(DateOnly from, DateOnly toExclusive)
     {
         var result = new Dictionary<DateOnly, long>();
@@ -132,7 +138,7 @@ public sealed class TimeEntryRepository
         cmd.CommandText = """
             SELECT start_time, end_time, duration_seconds
             FROM time_entries
-            WHERE substr(start_time, 1, 10) >= $from AND substr(start_time, 1, 10) < $to;
+            WHERE start_time >= $from AND start_time < $to;
             """;
         cmd.Parameters.AddWithValue("$from", from.ToString("yyyy-MM-dd"));
         cmd.Parameters.AddWithValue("$to", toExclusive.ToString("yyyy-MM-dd"));

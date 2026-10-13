@@ -551,13 +551,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         DayTimeText = sec >= 60 ? $"累计 {DurationFormatter.Compact(sec)}" : "";
     }
 
+    /// <summary>
+    /// 计时运行时每秒刷新「当日累计」显示。
+    /// 日历格与面板用的是同一天的同一个值，因此每秒只查一次数据库（原来查了两次）。
+    /// </summary>
     private void RefreshLiveTotals(DateOnly runDate)
     {
+        long sec = _times.GetSecondsForDate(runDate);
         var cell = Cells.FirstOrDefault(c => c.Date == runDate);
         if (cell is not null)
-            cell.TimeText = DurationFormatter.Compact(_times.GetSecondsForDate(runDate));
+            cell.TimeText = DurationFormatter.Compact(sec);
         if (SelectedDate == runDate)
-            RefreshDayTimeText();
+            DayTimeText = sec >= 60 ? $"累计 {DurationFormatter.Compact(sec)}" : "";
     }
 
     // ═══ 消费记账 ═══

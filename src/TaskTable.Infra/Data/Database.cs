@@ -56,6 +56,10 @@ public sealed class Database
                 duration_seconds INTEGER NOT NULL DEFAULT 0
             );
             CREATE INDEX IF NOT EXISTS idx_time_entries_task ON time_entries(task_id);
+            -- 计时按日期查询走 start_time 区间比较（见 TimeEntryRepository），需要该列索引
+            CREATE INDEX IF NOT EXISTS idx_time_entries_start ON time_entries(start_time);
+            -- 「当前是否有进行中的计时」查询（end_time IS NULL）用部分索引，索引体积仅与 running 行数相当
+            CREATE INDEX IF NOT EXISTS idx_time_entries_running ON time_entries(end_time) WHERE end_time IS NULL;
 
             CREATE TABLE IF NOT EXISTS expenses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,6 +93,9 @@ public sealed class Database
         }
     }
 
+    /// <summary>每日备份保留份数（超出后按文件名（即日期）从旧到新删除）。</summary>
+    private const int BackupRetentionCount = 30;
+
     private void BackupOncePerDay()
     {
         try
@@ -97,10 +104,24 @@ public sealed class Database
             if (!File.Exists(file)) return;
             var stamp = Path.Combine(AppPaths.BackupDir, $"tasktable-{DateTime.Today:yyyy-MM-dd}.db");
             if (!File.Exists(stamp)) File.Copy(file, stamp);
+            PruneBackups();
         }
         catch (Exception ex)
         {
             AppLog.Warn($"数据库备份失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>只保留最近 N 份每日备份，避免长期累积占满磁盘。</summary>
+    private static void PruneBackups()
+    {
+        var stale = Directory.GetFiles(AppPaths.BackupDir, "tasktable-*.db")
+            .OrderByDescending(f => Path.GetFileName(f), StringComparer.Ordinal)
+            .Skip(BackupRetentionCount);
+        foreach (var old in stale)
+        {
+            try { File.Delete(old); }
+            catch { /* 清理失败不影响启动 */ }
         }
     }
 }
