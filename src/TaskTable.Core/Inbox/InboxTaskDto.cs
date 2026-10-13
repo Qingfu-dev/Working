@@ -14,8 +14,6 @@ public sealed class InboxTaskDto
     [JsonPropertyName("title")] public string? Title { get; set; }
     [JsonPropertyName("date")] public string? Date { get; set; }
     [JsonPropertyName("priority")] public int? Priority { get; set; }
-    [JsonPropertyName("tags")] public List<string>? Tags { get; set; }
-    [JsonPropertyName("note")] public string? Note { get; set; }
     [JsonPropertyName("estimateMinutes")] public int? EstimateMinutes { get; set; }
     [JsonPropertyName("source")] public string? Source { get; set; }
 }
@@ -70,10 +68,8 @@ public static class InboxTaskParser
             tasks.Add(new TaskItem
             {
                 Title = dto.Title.Trim(),
-                Note = string.IsNullOrWhiteSpace(dto.Note) ? null : dto.Note.Trim(),
                 PlanDate = date,
                 Priority = priority,
-                Tags = dto.Tags is { Count: > 0 } ? string.Join(',', dto.Tags) : null,
                 EstimateMinutes = dto.EstimateMinutes is > 0 ? dto.EstimateMinutes : null,
                 Source = string.IsNullOrWhiteSpace(dto.Source) ? "ai" : dto.Source.Trim(),
                 Status = TaskStatus.Todo,

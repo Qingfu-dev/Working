@@ -12,7 +12,6 @@ public sealed class TaskItem
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = string.Empty;
-    public string? Note { get; set; }
 
     /// <summary>计划日期（本地日期，yyyy-MM-dd）。</summary>
     public DateOnly PlanDate { get; set; }
@@ -21,9 +20,6 @@ public sealed class TaskItem
 
     /// <summary>1 高 / 2 中 / 3 低。</summary>
     public int Priority { get; set; } = 2;
-
-    /// <summary>标签，逗号分隔存储。</summary>
-    public string? Tags { get; set; }
 
     /// <summary>来源标记：manual / ai / ai:xxx。</summary>
     public string Source { get; set; } = "manual";

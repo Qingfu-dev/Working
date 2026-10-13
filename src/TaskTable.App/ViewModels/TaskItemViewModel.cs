@@ -18,9 +18,7 @@ public sealed partial class TaskItemViewModel : ObservableObject
 
     public string Id => Model.Id;
     public string Title => Model.Title;
-    public string? Note => Model.Note;
     public bool IsAi => Model.IsFromAi;
-    public bool HasNote => !string.IsNullOrWhiteSpace(Model.Note);
 
     public bool IsDone
     {

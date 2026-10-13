@@ -17,9 +17,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- 标题栏 -->
@@ -64,16 +61,7 @@
                 </StackPanel>
             </Grid>
 
-            <TextBox Grid.Row="3" Margin="0,10,0,0" Style="{StaticResource InputBox}"
-                     Tag="标签（逗号分隔，可空）" ToolTip="标签（逗号分隔，可空）"
-                     Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
-
-            <TextBox Grid.Row="4" Margin="0,10,0,0" Style="{StaticResource InputBox}" MinHeight="64"
-                     AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
-                     Tag="备注（可空）" ToolTip="备注（可空）"
-                     Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"/>
-
-            <Grid Grid.Row="6" Margin="0,14,0,0">
+            <Grid Grid.Row="3" Margin="0,14,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>

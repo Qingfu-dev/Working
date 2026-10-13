@@ -14,8 +14,8 @@ public sealed class TaskRepository
         using var conn = _db.Open();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = """
-            INSERT INTO tasks (id, title, note, plan_date, status, priority, tags, source, estimate_minutes, created_at, completed_at)
-            VALUES ($id, $title, $note, $date, $status, $priority, $tags, $source, $est, $created, $completed);
+            INSERT INTO tasks (id, title, plan_date, status, priority, source, estimate_minutes, created_at, completed_at)
+            VALUES ($id, $title, $date, $status, $priority, $source, $est, $created, $completed);
             """;
         Bind(cmd, task);
         cmd.ExecuteNonQuery();
@@ -30,8 +30,8 @@ public sealed class TaskRepository
             using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
             cmd.CommandText = """
-                INSERT INTO tasks (id, title, note, plan_date, status, priority, tags, source, estimate_minutes, created_at, completed_at)
-                VALUES ($id, $title, $note, $date, $status, $priority, $tags, $source, $est, $created, $completed);
+                INSERT INTO tasks (id, title, plan_date, status, priority, source, estimate_minutes, created_at, completed_at)
+                VALUES ($id, $title, $date, $status, $priority, $source, $est, $created, $completed);
                 """;
             Bind(cmd, task);
             cmd.ExecuteNonQuery();
@@ -105,7 +105,7 @@ public sealed class TaskRepository
         using var conn = _db.Open();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = $"""
-            SELECT id, title, note, plan_date, status, priority, tags, source, estimate_minutes, created_at, completed_at
+            SELECT id, title, plan_date, status, priority, source, estimate_minutes, created_at, completed_at
             FROM tasks WHERE {where} ORDER BY priority ASC, created_at ASC;
             """;
         bindWhere(cmd);
@@ -116,15 +116,13 @@ public sealed class TaskRepository
             {
                 Id = reader.GetString(0),
                 Title = reader.GetString(1),
-                Note = reader.IsDBNull(2) ? null : reader.GetString(2),
-                PlanDate = DateOnly.ParseExact(reader.GetString(3), "yyyy-MM-dd"),
-                Status = (TaskStatus)reader.GetInt32(4),
-                Priority = reader.GetInt32(5),
-                Tags = reader.IsDBNull(6) ? null : reader.GetString(6),
-                Source = reader.GetString(7),
-                EstimateMinutes = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                CreatedAt = DateTime.Parse(reader.GetString(9)),
-                CompletedAt = reader.IsDBNull(10) ? null : DateTime.Parse(reader.GetString(10))
+                PlanDate = DateOnly.ParseExact(reader.GetString(2), "yyyy-MM-dd"),
+                Status = (TaskStatus)reader.GetInt32(3),
+                Priority = reader.GetInt32(4),
+                Source = reader.GetString(5),
+                EstimateMinutes = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                CreatedAt = DateTime.Parse(reader.GetString(7)),
+                CompletedAt = reader.IsDBNull(8) ? null : DateTime.Parse(reader.GetString(8))
             });
         }
         return list;
@@ -134,11 +132,9 @@ public sealed class TaskRepository
     {
         cmd.Parameters.AddWithValue("$id", t.Id);
         cmd.Parameters.AddWithValue("$title", t.Title);
-        cmd.Parameters.AddWithValue("$note", (object?)t.Note ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$date", t.PlanDate.ToString("yyyy-MM-dd"));
         cmd.Parameters.AddWithValue("$status", (int)t.Status);
         cmd.Parameters.AddWithValue("$priority", t.Priority);
-        cmd.Parameters.AddWithValue("$tags", (object?)t.Tags ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$source", t.Source);
         cmd.Parameters.AddWithValue("$est", (object?)t.EstimateMinutes ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$created", t.CreatedAt.ToString("o"));

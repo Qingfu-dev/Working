@@ -8,10 +8,8 @@ namespace TaskTable.App.ViewModels;
 public sealed partial class QuickAddViewModel : ObservableObject
 {
     [ObservableProperty] private string _title = "";
-    [ObservableProperty] private string _note = "";
     [ObservableProperty] private string _dateText;
     [ObservableProperty] private int _priorityIndex = 1; // 0高 1中 2低
-    [ObservableProperty] private string _tags = "";
 
     public Action<TaskItem>? Saved;
     public Action? Cancelled;
@@ -31,10 +29,8 @@ public sealed partial class QuickAddViewModel : ObservableObject
         var task = new TaskItem
         {
             Title = Title.Trim(),
-            Note = string.IsNullOrWhiteSpace(Note) ? null : Note.Trim(),
             PlanDate = date,
             Priority = PriorityIndex switch { 0 => 1, 2 => 3, _ => 2 },
-            Tags = string.IsNullOrWhiteSpace(Tags) ? null : Tags.Trim(),
             Source = "manual"
         };
         Saved?.Invoke(task);

@@ -38,11 +38,9 @@ public sealed class Database
             CREATE TABLE IF NOT EXISTS tasks (
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
-                note TEXT NULL,
                 plan_date TEXT NOT NULL,
                 status INTEGER NOT NULL DEFAULT 0,
                 priority INTEGER NOT NULL DEFAULT 2,
-                tags TEXT NULL,
                 source TEXT NOT NULL DEFAULT 'manual',
                 estimate_minutes INTEGER NULL,
                 created_at TEXT NOT NULL,
@@ -69,6 +67,26 @@ public sealed class Database
             CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date);
             """;
         cmd.ExecuteNonQuery();
+        DropLegacyColumns(conn);
+    }
+
+    /// <summary>旧库升级（v0.1.11 起移除标签/备注功能）：把遗留的 note / tags 列一并删除。</summary>
+    private static void DropLegacyColumns(SqliteConnection conn)
+    {
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA table_info(tasks);";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read()) columns.Add(reader.GetString(1));
+        }
+        foreach (var name in new[] { "note", "tags" })
+        {
+            if (!columns.Contains(name)) continue;
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"ALTER TABLE tasks DROP COLUMN {name};";
+            cmd.ExecuteNonQuery();
+        }
     }
 
     private void BackupOncePerDay()
