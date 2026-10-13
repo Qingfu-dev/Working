@@ -69,7 +69,8 @@ TaskTable.slnx
 | trash.png | 9-媒体/垃圾桶 | 删除任务 |
 | play.png | 9-媒体/播放 | 开始计时 |
 | stop.png | 9-媒体/停止 | 结束计时 |
-| tray.png | 9-媒体/日历（白色） | 托盘图标 |
+
+软件图标（exe 文件图标 / 窗口图标 / 托盘图标）为 `assets/app.ico`（角色插画，128×128）。
 
 ## 说明
 

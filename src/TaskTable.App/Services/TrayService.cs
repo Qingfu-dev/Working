@@ -20,7 +20,7 @@ public sealed class TrayService : IDisposable
 
         _tray = new TaskbarIcon
         {
-            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/Icons/tray.png")),
+            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/app.ico")),
             ToolTipText = "任务表"
         };
 

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\Icons\*.png" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +21,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>0.1.7</Version>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>0.1.8</Version>
     <Product>任务表</Product>
     <Company>Qing_Fu.CN</Company>
   </PropertyGroup>
