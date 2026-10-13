@@ -20,6 +20,7 @@ public partial class App : Application
     private AppSettings _settings = new();
     private AutostartService? _autostart;
     private TimeEntryRepository? _timeRepo;
+    private ExpenseRepository? _expenseRepo;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -67,6 +68,7 @@ public partial class App : Application
         var timeRepo = new TimeEntryRepository(db);
         var expenseRepo = new ExpenseRepository(db);
         _timeRepo = timeRepo;
+        _expenseRepo = expenseRepo;
 
         // ── 开机自启动（首启默认开启） ──
         var autostart = new AutostartService(Environment.ProcessPath
@@ -137,8 +139,8 @@ public partial class App : Application
 
     private void ShowHeatmap()
     {
-        if (_timeRepo is null) return;
-        var vm = new HeatmapViewModel(_timeRepo, DateOnly.FromDateTime(DateTime.Today));
+        if (_timeRepo is null || _expenseRepo is null) return;
+        var vm = new HeatmapViewModel(_timeRepo, _expenseRepo, DateOnly.FromDateTime(DateTime.Today));
         var window = new HeatmapWindow(vm);
         window.Show();
         window.Activate();

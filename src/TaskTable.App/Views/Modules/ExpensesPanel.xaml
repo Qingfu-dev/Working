@@ -47,7 +47,7 @@
         <WrapPanel Grid.Row="2" Margin="0,8,0,0">
             <TextBox Width="72" MinHeight="30" Style="{StaticResource InputBox}"
                      Text="{Binding NewExpenseAmount, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="金额，如 25.5"/>
+                     Tag="金额" ToolTip="金额，如 25.5" AutomationProperties.Name="金额"/>
             <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="吃饭" Margin="8,0,0,0"
                     Command="{Binding AddExpenseCommand}" CommandParameter="吃饭"/>
             <Button Style="{StaticResource ChipButton}" MinHeight="30" Content="零食" Margin="6,0,0,0"

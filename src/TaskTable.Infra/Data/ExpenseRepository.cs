@@ -52,4 +52,27 @@ public sealed class ExpenseRepository
         cmd.Parameters.AddWithValue("$id", id);
         cmd.ExecuteNonQuery();
     }
+
+    /// <summary>按日期区间（左闭右开）聚合每日消费合计，供消费热力图使用。</summary>
+    public Dictionary<DateOnly, decimal> GetDailyTotals(DateOnly from, DateOnly toExclusive)
+    {
+        var result = new Dictionary<DateOnly, decimal>();
+        using var conn = _db.Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT expense_date, SUM(amount)
+            FROM expenses
+            WHERE expense_date >= $from AND expense_date < $to
+            GROUP BY expense_date;
+            """;
+        cmd.Parameters.AddWithValue("$from", from.ToString("yyyy-MM-dd"));
+        cmd.Parameters.AddWithValue("$to", toExclusive.ToString("yyyy-MM-dd"));
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            if (!DateOnly.TryParseExact(reader.GetString(0), "yyyy-MM-dd", out var day)) continue;
+            result[day] = (decimal)reader.GetDouble(1);
+        }
+        return result;
+    }
 }

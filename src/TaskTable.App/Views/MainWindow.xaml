@@ -35,8 +35,9 @@
                             AutomationProperties.Name="快速添加" Command="{Binding AddTaskCommand}">
                         <Image Source="pack://application:,,,/Assets/Icons/add.png" Width="16" Height="16"/>
                     </Button>
-                    <Button Style="{StaticResource IconButton}" ToolTip="专注热力图"
-                            AutomationProperties.Name="专注热力图" Command="{Binding OpenHeatmapCommand}">
+                    <Button Style="{StaticResource IconButton}" ToolTip="热力图（专注时长 / 每日消费）"
+                            AutomationProperties.Name="热力图" AutomationProperties.AutomationId="btn-heatmap"
+                            Command="{Binding OpenHeatmapCommand}">
                         <Image Source="pack://application:,,,/Assets/Icons/chart.png" Width="16" Height="16"/>
                     </Button>
                     <Button Style="{StaticResource IconButton}" ToolTip="设置"

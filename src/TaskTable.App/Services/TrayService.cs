@@ -38,7 +38,7 @@ public sealed class TrayService : IDisposable
         settingsItem.Click += (_, _) => openSettings();
         menu.Items.Add(settingsItem);
 
-        var heatmapItem = new MenuItem { Header = "专注热力图" };
+        var heatmapItem = new MenuItem { Header = "热力图（专注 / 消费）" };
         heatmapItem.Click += (_, _) => openHeatmap();
         menu.Items.Add(heatmapItem);
 
