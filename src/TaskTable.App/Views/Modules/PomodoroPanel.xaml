@@ -19,8 +19,9 @@
             </Canvas>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding PomodoroBigText}" FontSize="30" FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
+                           AutomationProperties.AutomationId="txt-pomo-big" HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding PomodoroPhaseLabel}" FontSize="11.5" Margin="0,2,0,0"
+                           AutomationProperties.AutomationId="txt-pomo-phase"
                            Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
             </StackPanel>
         </Grid>
@@ -29,10 +30,12 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
             <Button Style="{StaticResource PrimaryButton}" MinWidth="104" MinHeight="30" FontSize="13"
                     Content="{Binding PomodoroMainText}"
+                    AutomationProperties.AutomationId="btn-pomo-main"
                     Command="{Binding TogglePomodoroCommand}"
                     IsEnabled="{Binding PomodoroEnabled}"/>
             <Button Style="{StaticResource GhostButton}" MinWidth="62" MinHeight="30" FontSize="13"
                     Margin="8,0,0,0" Content="重置"
+                    AutomationProperties.AutomationId="btn-pomo-reset"
                     Command="{Binding ResetPomodoroCommand}"
                     Visibility="{Binding PomodoroResetVisible, Converter={StaticResource BoolToVis}}"/>
         </StackPanel>

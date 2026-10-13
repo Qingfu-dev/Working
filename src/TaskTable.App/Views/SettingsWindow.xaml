@@ -51,6 +51,33 @@
                     </Grid>
                     <CheckBox Style="{StaticResource LabeledCheckBox}" Content="专注结束后自动开始休息"
                               Margin="0,12,0,0" IsChecked="{Binding PomodoroAutoStartBreak}"/>
+
+                    <Grid Margin="0,14,0,0">
+                        <TextBlock Text="任务联动" VerticalAlignment="Center"/>
+                        <ListBox x:Name="LinkModeList" AutomationProperties.Name="任务联动"
+                                 AutomationProperties.AutomationId="sel-linkmode"
+                                 Background="Transparent" BorderThickness="0" Padding="0"
+                                 HorizontalAlignment="Right" VerticalAlignment="Center"
+                                 SelectedIndex="{Binding PomodoroLinkIndex, Mode=TwoWay}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource SegmentedItem}"/>
+                            </ListBox.ItemContainerStyle>
+                            <ListBoxItem Content="关闭" AutomationProperties.AutomationId="link-off"/>
+                            <ListBoxItem Content="仅启动" AutomationProperties.AutomationId="link-start"/>
+                            <ListBoxItem Content="启动和停止" AutomationProperties.AutomationId="link-stop"/>
+                            <ListBoxItem Content="完整联动" AutomationProperties.AutomationId="link-full"/>
+                        </ListBox>
+                    </Grid>
+                    <TextBlock Text="{Binding PomodoroLinkHint}" FontSize="11"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="0,6,0,0"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -91,6 +118,13 @@
                 <StackPanel>
                     <CheckBox Style="{StaticResource LabeledCheckBox}" Content="开机自启动（静默进托盘）"
                               IsChecked="{Binding AutostartEnabled}"/>
+                    <CheckBox Style="{StaticResource LabeledCheckBox}" Content="显示悬停提示"
+                              Margin="0,12,0,0" IsChecked="{Binding ShowTooltips}"
+                              AutomationProperties.Name="显示悬停提示"
+                              AutomationProperties.AutomationId="chk-tooltips"/>
+                    <TextBlock Text="开启后，鼠标悬停在按钮等控件上会显示功能说明气泡" FontSize="11"
+                               Foreground="{StaticResource TextMutedBrush}" Margin="30,5,0,0"
+                               TextWrapping="Wrap"/>
                     <Grid Margin="0,12,0,0">
                         <TextBlock Text="AI 收件箱目录" VerticalAlignment="Center"/>
                         <Button Style="{StaticResource GhostButton}" MinHeight="30" Padding="12,2" FontSize="12"
@@ -148,6 +182,7 @@
                 <Button Style="{StaticResource GhostButton}" Content="取消" Margin="0,0,10,0"
                         Command="{Binding CancelCommand}"/>
                 <Button Style="{StaticResource PrimaryButton}" Content="保存" IsDefault="True"
+                        AutomationProperties.AutomationId="btn-save"
                         Command="{Binding SaveCommand}"/>
             </StackPanel>
         </StackPanel>

@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using TaskTable.App.Services;
 using TaskTable.App.ViewModels;
 using TaskTable.App.Views;
@@ -24,6 +25,19 @@ public partial class App : Application
     {
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        // ── 悬停提示开关：新建的窗口在加载时自动套用；提示将弹出时可再拦截一次 ──
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler((sender, _) =>
+            {
+                if (sender is Window window)
+                    ToolTipService.SetIsEnabled(window, _settings.ShowTooltips);
+            }));
+        EventManager.RegisterClassHandler(typeof(FrameworkElement), ToolTipService.ToolTipOpeningEvent,
+            new ToolTipEventHandler((_, args) =>
+            {
+                if (!_settings.ShowTooltips) args.Handled = true;
+            }));
 
         AppPaths.EnsureAll();
         AppLog.Info("═══ 任务表启动 ═══");
@@ -93,6 +107,13 @@ public partial class App : Application
 
     private void ShowMain() => _mainWindow?.ShowAndActivate();
 
+    /// <summary>把「显示悬停提示」开关应用到当前已打开的所有窗口。</summary>
+    private void ApplyTooltipSetting()
+    {
+        foreach (Window window in Windows)
+            ToolTipService.SetIsEnabled(window, _settings.ShowTooltips);
+    }
+
     /// <summary>统一通知出口：写日志 + 托盘气泡。</summary>
     private void Notify(string title, string message)
     {
@@ -106,6 +127,7 @@ public partial class App : Application
         vm.Saved += () =>
         {
             _mainVm?.OnSettingsSaved();
+            ApplyTooltipSetting();
             Notify("任务表", "设置已保存");
         };
         var window = new SettingsWindow(vm);

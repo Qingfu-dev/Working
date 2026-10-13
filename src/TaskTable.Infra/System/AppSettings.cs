@@ -2,6 +2,19 @@ using System.Text.Json;
 
 namespace TaskTable.Infra.System;
 
+/// <summary>任务计时与番茄钟的联动模式。</summary>
+public enum TaskLinkMode
+{
+    /// <summary>关闭联动，两者互不影响。</summary>
+    Off = 0,
+    /// <summary>仅启动：开始任务计时时番茄钟同步开始专注。</summary>
+    StartOnly = 1,
+    /// <summary>启动和停止：开始任务同步开始专注；停止任务时番茄钟归零；番茄钟结束仅提醒。</summary>
+    StartStop = 2,
+    /// <summary>完整联动：番茄钟专注结束自动停止任务计时并结算；手动重置番茄钟也会停止任务计时。</summary>
+    Full = 3
+}
+
 /// <summary>
 /// 应用设置：%AppData%\TaskTable\settings.json。
 /// 缺失字段自动使用默认值，读取/写入失败不阻塞启动。
@@ -13,6 +26,13 @@ public sealed class AppSettings
     public int PomodoroWorkMinutes { get; set; } = 25;
     public int PomodoroBreakMinutes { get; set; } = 5;
     public bool PomodoroAutoStartBreak { get; set; } = true;
+
+    /// <summary>任务计时与番茄钟联动模式。</summary>
+    public TaskLinkMode PomodoroLink { get; set; } = TaskLinkMode.Full;
+
+    // ── 界面 ──
+    /// <summary>是否显示悬停提示（鼠标悬停在按钮等控件上的说明气泡）。</summary>
+    public bool ShowTooltips { get; set; } = true;
 
     // ── 健康提醒 ──
     public bool SedentaryEnabled { get; set; } = true;
@@ -27,7 +47,11 @@ public sealed class AppSettings
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings();
+            {
+                var settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new AppSettings();
+                if (!Enum.IsDefined(settings.PomodoroLink)) settings.PomodoroLink = TaskLinkMode.Full;
+                return settings;
+            }
         }
         catch (Exception ex)
         {

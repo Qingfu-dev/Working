@@ -20,7 +20,7 @@
                 <TextBlock Text="›" FontSize="18" Margin="0,-3,0,0"/>
             </Button>
             <Button Style="{StaticResource GhostButton}" MinHeight="26" Padding="12,2" Margin="10,0,0,0"
-                    FontSize="12" Content="今天" Command="{Binding GoTodayCommand}"/>
+                    FontSize="12" Content="今天" ToolTip="回到今天" Command="{Binding GoTodayCommand}"/>
         </StackPanel>
 
         <UniformGrid Grid.Row="1" Columns="7" Margin="0,0,0,6">

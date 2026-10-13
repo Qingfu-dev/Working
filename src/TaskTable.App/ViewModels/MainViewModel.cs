@@ -261,6 +261,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (_running?.TaskId == vm.Id)
         {
             StopCurrentTimer();
+            SyncPomodoroOnTaskStop();
         }
         else
         {
@@ -268,6 +269,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _running = _times.Start(vm.Id);
             RunningTaskTitle = vm.Title;
             SetRunningFlags(vm.Id);
+            SyncPomodoroOnTaskStart();
         }
         OnPropertyChanged(nameof(HasRunningTimer));
         OnPropertyChanged(nameof(RunningTimerText));
@@ -391,6 +393,40 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(PomodoroResetVisible));
     }
 
+    /// <summary>任务计时与番茄钟的联动模式（实时读取设置）。</summary>
+    private TaskLinkMode LinkMode => _settings.PomodoroLink;
+
+    /// <summary>联动：开始任务计时时，番茄钟同步进入专注。</summary>
+    private void SyncPomodoroOnTaskStart()
+    {
+        if (LinkMode == TaskLinkMode.Off || !_settings.PomodoroEnabled) return;
+        switch (Phase)
+        {
+            case PomodoroPhase.Idle:
+            case PomodoroPhase.Breaking: // 休息中开始任务：跳过休息，开始新一轮专注
+                _pomodoroTotal = _pomodoroRemaining = WorkMinutes * 60;
+                Phase = PomodoroPhase.Working;
+                break;
+            case PomodoroPhase.Paused:   // 暂停中开始任务：继续上一轮专注
+                Phase = PomodoroPhase.Working;
+                break;
+            case PomodoroPhase.Working:  // 已在专注中，不打断
+                break;
+        }
+        NotifyPomodoroDisplay();
+    }
+
+    /// <summary>联动：停止任务计时时，番茄钟归零（「启动和停止」及以上模式）。</summary>
+    private void SyncPomodoroOnTaskStop()
+    {
+        if (LinkMode is not (TaskLinkMode.StartStop or TaskLinkMode.Full)) return;
+        if (Phase == PomodoroPhase.Idle) return;
+        Phase = PomodoroPhase.Idle;
+        _pomodoroRemaining = 0;
+        _pomodoroTotal = 0;
+        NotifyPomodoroDisplay();
+    }
+
     /// <summary>主按钮：空闲→开始专注；专注→暂停；暂停→继续；休息→跳过休息。</summary>
     [RelayCommand]
     private void TogglePomodoro()
@@ -414,13 +450,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         NotifyPomodoroDisplay();
     }
 
-    /// <summary>重置回空闲状态。</summary>
+    /// <summary>重置回空闲状态（完整联动模式下同步停止任务计时）。</summary>
     [RelayCommand]
     private void ResetPomodoro()
     {
         Phase = PomodoroPhase.Idle;
         _pomodoroRemaining = 0;
         _pomodoroTotal = 0;
+        if (LinkMode == TaskLinkMode.Full) StopCurrentTimer();
         NotifyPomodoroDisplay();
     }
 
@@ -445,7 +482,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (Phase == PomodoroPhase.Working)
         {
-            _notify("番茄钟", $"专注 {WorkMinutes} 分钟完成，休息一下吧");
+            bool stopLinkedTask = LinkMode == TaskLinkMode.Full && _running is not null;
+            if (stopLinkedTask) StopCurrentTimer();
+            _notify("番茄钟", stopLinkedTask
+                ? $"专注 {WorkMinutes} 分钟完成，已停止任务计时，休息一下吧"
+                : $"专注 {WorkMinutes} 分钟完成，休息一下吧");
             if (_settings.PomodoroAutoStartBreak)
             {
                 _pomodoroTotal = _pomodoroRemaining = BreakMinutes * 60;

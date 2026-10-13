@@ -55,6 +55,7 @@
                             </Grid.ColumnDefinitions>
                             <CheckBox Style="{StaticResource RoundCheckBox}"
                                       IsChecked="{Binding IsDone, Mode=TwoWay}"
+                                      ToolTip="标记完成 / 取消完成"
                                       VerticalAlignment="Top" Margin="0,2,10,0"/>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="{Binding Title}" FontSize="14"
@@ -78,11 +79,13 @@
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
                                 <Button Style="{StaticResource IconButton}" Width="28" Height="28" Padding="5"
                                         ToolTip="{Binding TimerButtonTip}"
+                                        AutomationProperties.Name="{Binding TimerButtonTip}"
                                         Tag="{Binding}" Click="TimerButton_Click">
                                     <Image Source="{Binding TimerButtonIcon}" Width="14" Height="14"/>
                                 </Button>
                                 <Button Style="{StaticResource IconButton}" Width="28" Height="28" Padding="5"
-                                        ToolTip="删除" Tag="{Binding}" Click="DeleteButton_Click">
+                                        ToolTip="删除" AutomationProperties.Name="删除任务"
+                                        Tag="{Binding}" Click="DeleteButton_Click">
                                     <Image Source="pack://application:,,,/Assets/Icons/trash.png" Width="13" Height="13"/>
                                 </Button>
                             </StackPanel>
