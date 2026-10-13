@@ -35,6 +35,7 @@
             </Grid>
 
             <TextBox Grid.Row="1" x:Name="TitleBox" Style="{StaticResource InputBox}"
+                     Tag="任务标题（必填）"
                      Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"/>
 
             <Grid Grid.Row="2" Margin="0,10,0,0">
@@ -42,9 +43,18 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Style="{StaticResource InputBox}" ToolTip="计划日期（yyyy-MM-dd）"
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="计划日期" FontSize="11" Margin="2,0,0,4"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="优先级" FontSize="11" Margin="12,0,0,4"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBox Grid.Row="1" Grid.Column="0" Style="{StaticResource InputBox}"
+                         Tag="yyyy-MM-dd" ToolTip="计划日期（yyyy-MM-dd）"
                          Text="{Binding DateText, UpdateSourceTrigger=PropertyChanged}"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                     <RadioButton x:Name="PrioHigh" GroupName="Prio" Tag="0" Content="高"
                                  Style="{StaticResource PrioRadio}" Checked="Prio_Checked"/>
                     <RadioButton x:Name="PrioMid" GroupName="Prio" Tag="1" Content="中" IsChecked="True"
@@ -55,12 +65,12 @@
             </Grid>
 
             <TextBox Grid.Row="3" Margin="0,10,0,0" Style="{StaticResource InputBox}"
-                     ToolTip="标签（逗号分隔，可空）"
+                     Tag="标签（逗号分隔，可空）" ToolTip="标签（逗号分隔，可空）"
                      Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}"/>
 
             <TextBox Grid.Row="4" Margin="0,10,0,0" Style="{StaticResource InputBox}" MinHeight="64"
                      AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"
-                     ToolTip="备注（可空）"
+                     Tag="备注（可空）" ToolTip="备注（可空）"
                      Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"/>
 
             <Grid Grid.Row="6" Margin="0,14,0,0">
