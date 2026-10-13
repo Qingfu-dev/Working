@@ -35,12 +35,21 @@ public partial class PeriodPanel : UserControl
         StatusDot.Fill = peak ? red : green;
         StatusTitle.Foreground = peak ? red : green;
         StatusTitle.Text = peak ? "梁文锋时段" : "梁文谷时段";
-        StatusPrice.Text = peak ? "当前为高峰价格" : "当前价格为高峰时段价格的一半";
+        StatusPrice.Text = peak ? "高峰价格" : "半价";
+        StatusPrice.ToolTip = peak ? "当前为高峰价格" : "当前价格为高峰时段价格的一半";
 
         var next = PeakHours.NextSwitch(now);
-        StatusCountdown.Text = next is { } t
-            ? $"现在 {now:HH:mm}，距切换到{(peak ? "梁文谷" : "梁文锋")}时段还有 {FormatSpan(t - now)}"
-            : $"现在 {now:HH:mm}";
+        if (next is { } t)
+        {
+            string nextName = peak ? "梁文谷时段" : "梁文锋时段";
+            StatusCountdown.Text = $"现在 {now:HH:mm} · 距切换还有 {FormatSpan(t - now)}";
+            StatusCountdown.ToolTip = $"距离进入{nextName}还有 {FormatSpan(t - now)}（{t:HH:mm}）";
+        }
+        else
+        {
+            StatusCountdown.Text = $"现在 {now:HH:mm}";
+            StatusCountdown.ToolTip = null;
+        }
 
         if (_timelineDay != now.Date)
         {

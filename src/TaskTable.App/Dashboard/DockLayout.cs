@@ -27,7 +27,7 @@ public sealed class DockNode
     public static DockNode Default() => Group("H",
         (Group("V", (Leaf("pomodoro"), 1), (Leaf("expenses"), 1)), 0.95),
         (Leaf("calendar"), 2.0),
-        (Group("V", (Leaf("tasks"), 1.15), (Leaf("periods"), 1.0)), 1.05));
+        (Group("V", (Leaf("tasks"), 1.0), (Leaf("periods"), 1.0)), 1.05));
 }
 
 /// <summary>布局树操作：移除（自动折叠空分组）、邻接插入、交换。</summary>
