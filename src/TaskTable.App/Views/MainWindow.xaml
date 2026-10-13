@@ -43,8 +43,9 @@
                         <Image Source="pack://application:,,,/Assets/Icons/settings.png" Width="16" Height="16"/>
                     </Button>
                     <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="6,0"/>
-                    <Button Style="{StaticResource IconButton}" ToolTip="重置布局（恢复默认模块排列，浮窗一并收回）"
-                            AutomationProperties.Name="重置布局" Click="ResetLayout_Click">
+                    <Button Style="{StaticResource IconButton}" ToolTip="重置布局（恢复默认模块排列，收回浮窗并重新打开已关闭的窗口）"
+                            AutomationProperties.Name="重置布局" AutomationProperties.AutomationId="btn-reset-layout"
+                            Click="ResetLayout_Click">
                         <Path Data="M2,2 H12 V12 H2 Z M7,2 V12" Stroke="{StaticResource TextMutedBrush}"
                               StrokeThickness="1.3" StrokeLineJoin="Round" Width="13" Height="13" Stretch="Uniform"/>
                     </Button>

@@ -16,7 +16,7 @@ namespace TaskTable.App.Dashboard;
 /// <summary>
 /// 模块停靠容器：每个模块是一张带标题栏的卡片；拖动标题栏可重排布局——
 /// 拖到其他模块边缘＝分屏吸附（上下/左右），拖到中心＝交换位置；分隔条可调宽；标题栏双击＝模块最大化；
-/// 拖出主窗口＝模块浮窗化，可置顶、可拖回卡片上吸回停靠。
+/// 拖出主窗口＝模块浮窗化，可置顶、可拖回卡片上吸回停靠；标题栏右键＝关闭该窗口 / 添加窗口。
 /// </summary>
 public sealed class DockHost : Grid
 {
@@ -28,6 +28,7 @@ public sealed class DockHost : Grid
         ("calendar", "日历"),
         ("tasks", "当日任务"),
         ("expenses", "消费记账"),
+        ("periods", "峰谷时段"),
     };
 
     private static readonly Brush AccentBrush = Frozen(Color.FromRgb(0x0F, 0xDC, 0x78));
@@ -39,6 +40,7 @@ public sealed class DockHost : Grid
     private readonly List<Border> _cards = new();
     private readonly Canvas _overlay = new() { IsHitTestVisible = false };
     private readonly List<FloatState> _pendingFloats;
+    private readonly HashSet<string> _closed;
     private readonly DispatcherTimer _floatSaveDebounce;
 
     private DockNode? _layout;
@@ -60,13 +62,26 @@ public sealed class DockHost : Grid
     public DockHost()
     {
         Background = Brushes.Transparent;
-        (_layout, _maximized, _pendingFloats) = DockLayoutStore.Load();
+        var (layout, maximized, floats, closed) = DockLayoutStore.Load();
+        _layout = layout;
+        _maximized = maximized;
+        _pendingFloats = floats;
+        _closed = new HashSet<string>(closed);
+        ContextMenu = BuildAddMenu();
         _floatSaveDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _floatSaveDebounce.Tick += (_, _) =>
         {
             _floatSaveDebounce.Stop();
             SaveLayout();
         };
+
+        // 旧版本布局中缺失的模块（新版本新增）：自动补一张卡片；用户主动关闭的模块保持关闭
+        var open = DockTree.Modules(_layout).Concat(_pendingFloats.Select(f => f.Module!)).ToHashSet();
+        foreach (var id in DockNode.KnownModules.Where(m => !open.Contains(m) && !_closed.Contains(m)).ToList())
+        {
+            AppendTopLevel(id);
+            AppLog.Info($"新增模块自动打开: {id}");
+        }
         Rebuild();
     }
 
@@ -87,11 +102,12 @@ public sealed class DockHost : Grid
         if (_floats.Count > 0) Rebuild();
     }
 
-    /// <summary>恢复默认布局（左列番茄钟+记账 / 中列日历 / 右列当日任务），浮窗一并收回。</summary>
+    /// <summary>恢复默认布局（左列番茄钟+记账 / 中列日历 / 右列任务+峰谷），收回浮窗并重新打开已关闭的窗口。</summary>
     public void ResetLayout()
     {
         foreach (var win in _floats.Values.ToList()) win.PrepareCloseSilently();
         _floats.Clear();
+        _closed.Clear();
         _layout = DockNode.Default();
         _maximized = null;
         Rebuild();
@@ -108,7 +124,7 @@ public sealed class DockHost : Grid
     }
 
     private void SaveLayout() =>
-        DockLayoutStore.Save(_layout, _maximized, _floats.Values.Select(w => w.ToState()).ToList());
+        DockLayoutStore.Save(_layout, _maximized, _floats.Values.Select(w => w.ToState()).ToList(), _closed.ToList());
 
     /// <summary>浮窗位置 / 尺寸 / 置顶变化：防抖后写入 layout.json。</summary>
     public void NotifyFloatChanged()
@@ -126,12 +142,20 @@ public sealed class DockHost : Grid
 
     private static string TitleOf(string id) => Registry.First(r => r.Id == id).Title;
 
+    /// <summary>标题栏 Grid 的自动化节点（供 UIA 定位拖动条）。</summary>
+    private sealed class ModuleHeaderGrid : Grid
+    {
+        protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
+            => new System.Windows.Automation.Peers.FrameworkElementAutomationPeer(this);
+    }
+
     /// <summary>新建浮窗时的默认尺寸。</summary>
     private static Size DefaultFloatSize(string moduleId) => moduleId switch
     {
         "pomodoro" => new Size(360, 480),
         "calendar" => new Size(560, 520),
         "tasks" => new Size(420, 540),
+        "periods" => new Size(400, 520),
         _ => new Size(380, 480),
     };
 
@@ -163,16 +187,33 @@ public sealed class DockHost : Grid
         Children.Add(_overlay);
     }
 
-    /// <summary>四个模块全部浮窗化时停靠区的占位提示。</summary>
-    private UIElement BuildEmptyHint() => new TextBlock
+    /// <summary>停靠区为空（模块全部浮窗化或关闭）时的占位提示，右键可添加窗口。</summary>
+    private UIElement BuildEmptyHint()
     {
-        Text = "所有模块均已浮窗化\n把浮窗拖回此处即可重新停靠",
-        FontSize = 13,
-        TextAlignment = TextAlignment.Center,
-        Foreground = ResBrush("TextMutedBrush", MutedBrush),
-        HorizontalAlignment = HorizontalAlignment.Center,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
+        var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        panel.Children.Add(new TextBlock
+        {
+            Text = _floats.Count > 0 ? "所有模块均已浮窗化" : "当前没有打开的窗口",
+            FontSize = 13,
+            TextAlignment = TextAlignment.Center,
+            Foreground = ResBrush("TextMutedBrush", MutedBrush),
+            HorizontalAlignment = HorizontalAlignment.Center,
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "在标题栏右键可选择「添加窗口」\n浮窗拖回此处即可重新停靠",
+            FontSize = 11.5,
+            Margin = new Thickness(0, 6, 0, 0),
+            TextAlignment = TextAlignment.Center,
+            Foreground = ResBrush("TextMutedBrush", MutedBrush),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Opacity = 0.8,
+        });
+
+        var host = new Border { Background = Brushes.Transparent, Child = panel };
+        host.ContextMenu = BuildAddMenu();
+        return host;
+    }
 
     private UIElement BuildNode(DockNode node)
     {
@@ -298,13 +339,13 @@ public sealed class DockHost : Grid
 
     private FrameworkElement BuildHeader(string moduleId)
     {
-        var header = new Grid
+        var header = new ModuleHeaderGrid
         {
             Height = 34,
             Background = Brushes.Transparent,
             Cursor = Cursors.SizeAll,
             Tag = moduleId,
-            ToolTip = "拖动此栏调整布局：拖到其他模块边缘＝分屏，拖到中心＝交换；双击＝最大化；拖出窗口＝浮窗",
+            ToolTip = "拖动此栏调整布局：拖到其他模块边缘＝分屏，拖到中心＝交换；双击＝最大化；拖出窗口＝浮窗；右键＝关闭/添加窗口",
         };
         ToolTipService.SetShowDuration(header, 8000);
 
@@ -367,6 +408,9 @@ public sealed class DockHost : Grid
         SetColumn(maxBtn, 2);
         header.Children.Add(maxBtn);
 
+        AutomationProperties.SetName(header, $"拖动条·{TitleOf(moduleId)}");
+        AutomationProperties.SetAutomationId(header, $"header-{moduleId}");
+        header.ContextMenu = BuildModuleMenu(moduleId);
         header.MouseLeftButtonDown += Header_MouseLeftButtonDown;
         return header;
     }
@@ -386,6 +430,7 @@ public sealed class DockHost : Grid
             "pomodoro" => new PomodoroPanel(),
             "calendar" => new CalendarPanel(),
             "tasks" => new DayTasksPanel(),
+            "periods" => new PeriodPanel(),
             _ => new ExpensesPanel(),
         };
         _views[moduleId] = created;
@@ -401,6 +446,130 @@ public sealed class DockHost : Grid
             case Decorator d: d.Child = null; break;
             case Panel p: p.Children.Remove(el); break;
         }
+    }
+
+    // ═══════════ 模块菜单（标题栏右键：关闭 / 添加） ═══════════
+
+    /// <summary>构建模块右键菜单：关闭该窗口 / 添加窗口；停靠卡片与浮窗共用。</summary>
+    public ContextMenu BuildModuleMenu(string moduleId)
+    {
+        var menu = new ContextMenu();
+        if (ResStyle("ModuleMenu") is { } style) menu.Style = style;
+        menu.Opened += (_, _) => FillModuleMenu(menu, moduleId);
+        return menu;
+    }
+
+    private void FillModuleMenu(ContextMenu menu, string moduleId)
+    {
+        menu.Items.Clear();
+        var close = MakeMenuItem("关闭该窗口", $"menu-close-{moduleId}");
+        close.Click += (_, _) => Dispatcher.BeginInvoke(() => CloseModule(moduleId));
+        menu.Items.Add(close);
+        menu.Items.Add(MakeMenuSeparator());
+        menu.Items.Add(MakeAddSubmenu());
+    }
+
+    /// <summary>仅含「添加窗口」的菜单（停靠区空白处右键）。</summary>
+    private ContextMenu BuildAddMenu()
+    {
+        var menu = new ContextMenu();
+        if (ResStyle("ModuleMenu") is { } style) menu.Style = style;
+        menu.Opened += (_, _) =>
+        {
+            menu.Items.Clear();
+            menu.Items.Add(MakeAddSubmenu());
+        };
+        return menu;
+    }
+
+    /// <summary>「添加窗口」子菜单：列出当前未打开的模块供重新打开。</summary>
+    private MenuItem MakeAddSubmenu()
+    {
+        var add = MakeMenuItem("添加窗口", "menu-add");
+        var closed = ClosedModules();
+        if (closed.Count == 0)
+        {
+            var none = MakeMenuItem("（已全部打开）", "menu-add-none");
+            none.IsEnabled = false;
+            add.Items.Add(none);
+            return add;
+        }
+        foreach (var (id, title) in closed)
+        {
+            var item = MakeMenuItem(title, $"menu-add-{id}");
+            item.Click += (_, _) => Dispatcher.BeginInvoke(() => OpenModule(id));
+            add.Items.Add(item);
+        }
+        return add;
+    }
+
+    private static MenuItem MakeMenuItem(string header, string automationId)
+    {
+        var item = new MenuItem { Header = header };
+        if (ResStyle("ModuleMenuItem") is { } style) item.Style = style;
+        AutomationProperties.SetAutomationId(item, automationId);
+        return item;
+    }
+
+    private static Separator MakeMenuSeparator()
+    {
+        var sep = new Separator();
+        if (ResStyle("ModuleMenuSeparator") is { } style) sep.Style = style;
+        return sep;
+    }
+
+    /// <summary>当前处于关闭状态（未停靠且未浮窗）的模块。</summary>
+    private List<(string Id, string Title)> ClosedModules()
+    {
+        var open = DockTree.Modules(_layout).Concat(_floats.Keys).ToHashSet();
+        return Registry.Where(r => !open.Contains(r.Id)).Select(r => (r.Id, r.Title)).ToList();
+    }
+
+    /// <summary>关闭模块：停靠或浮窗中均可关闭，之后可在「添加窗口」中重新打开。</summary>
+    public void CloseModule(string moduleId)
+    {
+        if (!DockNode.KnownModules.Contains(moduleId)) return;
+        if (_floats.TryGetValue(moduleId, out var win))
+        {
+            win.PrepareCloseSilently();
+            _floats.Remove(moduleId);
+        }
+        _layout = DockTree.Remove(_layout, moduleId);
+        if (_maximized == moduleId) _maximized = null;
+        _closed.Add(moduleId);
+        AppLog.Info($"关闭窗口: {moduleId}");
+        Rebuild();
+        SaveLayout();
+    }
+
+    /// <summary>重新打开已关闭的模块：作为新的顶层列追加到最右侧。</summary>
+    public void OpenModule(string moduleId)
+    {
+        if (!DockNode.KnownModules.Contains(moduleId)) return;
+        if (_floats.ContainsKey(moduleId) || DockTree.Modules(_layout).Contains(moduleId)) return;
+        _closed.Remove(moduleId);
+        _maximized = null;
+        AppendTopLevel(moduleId);
+        AppLog.Info($"打开窗口: {moduleId}");
+        Rebuild();
+        SaveLayout();
+    }
+
+    /// <summary>把模块追加为顶层新列（树为空时成为唯一模块）。</summary>
+    private void AppendTopLevel(string moduleId)
+    {
+        if (_layout is null)
+        {
+            _layout = DockNode.Leaf(moduleId);
+            return;
+        }
+        if (_layout.Module is null)
+        {
+            _layout.Children!.Add(DockNode.Leaf(moduleId));
+            _layout.Weights!.Add(1.0);
+            return;
+        }
+        _layout = DockNode.Group("H", (_layout, 1.0), (DockNode.Leaf(moduleId), 1.0));
     }
 
     // ═══════════ 拖拽 ═══════════

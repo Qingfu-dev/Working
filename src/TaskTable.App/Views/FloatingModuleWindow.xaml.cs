@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -36,6 +37,12 @@ public partial class FloatingModuleWindow : Window
         ModuleHost.Content = view;
         Topmost = topmost;
         UpdatePinVisual();
+
+        // 标题栏右键：关闭该窗口 / 添加窗口（与停靠卡片共用同一菜单）
+        Header.ContextMenu = owner.BuildModuleMenu(moduleId);
+        AutomationProperties.SetName(Header, $"拖动条·{title}");
+        AutomationProperties.SetAutomationId(Header, $"float-header-{moduleId}");
+        AutomationProperties.SetAutomationId(this, $"float-window-{moduleId}");
 
         _saveDebounce.Tick += (_, _) =>
         {

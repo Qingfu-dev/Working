@@ -1,0 +1,75 @@
+<UserControl x:Class="TaskTable.App.Views.Modules.PeriodPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="14,8,14,12">
+
+            <!-- 当前时段状态 -->
+            <Border Background="{StaticResource SurfaceMutedBrush}"
+                    CornerRadius="{StaticResource RadiusControl}" Padding="12,9">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StatusDot" Width="10" Height="10" Margin="0,1,8,0"
+                                 VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusTitle" FontSize="17" FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   AutomationProperties.AutomationId="periods-status"/>
+                    </StackPanel>
+                    <TextBlock x:Name="StatusPrice" FontSize="12" Margin="18,4,0,0"
+                               Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock x:Name="StatusCountdown" FontSize="12" Margin="18,2,0,0"
+                               Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 今日时段分布 -->
+            <TextBlock x:Name="TimelineTitle" Text="今日时段分布" FontSize="12" FontWeight="Medium"
+                       Foreground="{StaticResource TextMutedBrush}" Margin="2,12,0,6"/>
+            <UniformGrid x:Name="TimelineGrid" Rows="1" Columns="24" Height="24"/>
+            <Grid Margin="2,4,2,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="0" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBlock Grid.Column="1" Text="6" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBlock Grid.Column="2" Text="12" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="18" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                    <TextBlock Text="24" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="22,0,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 规则说明 -->
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <Ellipse Width="8" Height="8" Fill="{StaticResource StateRedBrush}"
+                         VerticalAlignment="Center" Margin="2,0,8,0"/>
+                <TextBlock Text="梁文锋时段" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{StaticResource StateRedBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="高峰价格" FontSize="12.5" Margin="6,0,0,0"
+                           Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBlock Text="周一至周五 9:00-12:00、14:00-18:00（不含中国法定节假日）"
+                       FontSize="11.5" Margin="18,4,0,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource TextMutedBrush}"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Ellipse Width="8" Height="8" Fill="{StaticResource StateGreenBrush}"
+                         VerticalAlignment="Center" Margin="2,0,8,0"/>
+                <TextBlock Text="梁文谷时段" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{StaticResource StateGreenBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="价格为高峰时段价格的一半" FontSize="12.5" Margin="6,0,0,0"
+                           Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBlock Text="其余全部时间，含周末及中国法定节假日全天"
+                       FontSize="11.5" Margin="18,4,0,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource TextMutedBrush}"/>
+
+            <TextBlock Text="注：法定节假日按国务院办公厅 2025 / 2026 年放假安排内置"
+                       FontSize="10.5" Margin="2,10,0,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource TextMutedBrush}" Opacity="0.8"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

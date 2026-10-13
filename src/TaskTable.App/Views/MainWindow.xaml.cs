@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = vm;
+        System.Windows.Automation.AutomationProperties.SetAutomationId(this, "TaskTableMainWindow");
 
         TitleBar.MouseLeftButtonDown += TitleBar_MouseDown;
         StatusStrip.MouseLeftButtonDown += TitleBar_MouseDown;
